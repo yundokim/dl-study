@@ -1,8 +1,9 @@
 torch
 torchvision
 matplotlib
-scikit-learn
+scikit-learn~=1.6.1
 jupyter
 transformers
 datasets
 accelerate
+numpy~=2.2.5
