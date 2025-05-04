@@ -1,48 +1,24 @@
-from core import Variable, Add, MatMul, ReLU, SoftmaxCrossEntropy, to_onehot
+from core import Variable, SoftmaxCrossEntropy, ReLU, to_onehot, Model
 from layers import Dense
-from training import Evaluator
+from training import Evaluator, SGD, train
 from data import load_mnist
 
-
-class MLP:
+class MLP(Model):
     def __init__(self):
+        super().__init__()
         self.layers = [
             Dense(784, 128),
             ReLU(),
             Dense(128, 10)
         ]
 
-    def __call__(self, x):
-        for layer in self.layers:
-            x = layer(x) if isinstance(layer, Dense) else layer(x)
-        return x
-
-    def params(self):
-        p = []
-        for layer in self.layers:
-            if isinstance(layer, Dense):
-                p.extend(layer.params())
-        return p
-
-
 if __name__ == "__main__":
     x_train, y_train, x_test, y_test = load_mnist()
     model = MLP()
+    optimizer = SGD(model.params(), lr=0.1)
     evaluator = Evaluator(model)
-    lr = 0.1
-    batch_size = 100
 
-    for i in range(0, len(x_train), batch_size):
-        xb = Variable(x_train[i:i + batch_size])
-        labels = y_train[i:i + batch_size]
-        yb = Variable(to_onehot(labels))
-        out = model(xb)
-        loss = SoftmaxCrossEntropy()(out, yb)
-        loss.backward()
-
-        for p in model.params():
-            p.data -= lr * p.grad
-            p.grad = None
+    train(model, optimizer, x_train, y_train, batch_size=100)
 
     train_acc = evaluator.accuracy(x_train, y_train)
     test_acc = evaluator.accuracy(x_test, y_test)
